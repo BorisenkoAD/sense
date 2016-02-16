@@ -1,10 +1,6 @@
 #include <Ethernet.h>
-// #include <EthernetClient.h>
-// #include <SPI.h>
-// #include <avr/wdt.h>
 
-
-#define KASSA 31       // номер кассы
+#define KASSA 49       // номер кассы
 #define TIMEOUT 150     // задержка в секундах между срабатываниями УЗД
 #define PORT 2200       // порт для подключения к удаленному компу
 #define TRIG_1 2
@@ -20,7 +16,7 @@
 #define LED_PIN_ERROR_SENSE 16       // А2 индикация ошибки - нет датчика(ошибка датчика)
 #define LED_PIN_ERROR_LAN   14       // А0 индикация ошибки - нет сети
 
-#define BLINK_INTERVAL  1000UL      // интервал между включение/выключением светодиода (1 секунд)
+#define BLINK_INTERVAL  1000UL      // интервал между включение/выключением светодиода (1 секунда)
 
 int US_status_1 = LOW;              // изначально флаг срабатывания УЗ неактивен
 byte ErrorState = ERROR_NOERROR;    //изначально ошибок нет.
@@ -28,7 +24,7 @@ byte ErrorState = ERROR_NOERROR;    //изначально ошибок нет.
 byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
 
 IPAddress subnet(255, 255, 252, 0);
-IPAddress ip(192, 168, 4, 31);      // ip устройства для 55 кассы (100я касса для теста)
+IPAddress ip(192, 168, 4, KASSA);      // ip устройства для 55 кассы (100я касса для теста)
 IPAddress server(192, 168, 5, 85); 
 IPAddress Dns(192, 168, 5, 139);
 IPAddress gateway(192, 168, 5, 139);
@@ -66,7 +62,8 @@ void loop() {
       if (client.connect(server, PORT)) {
         Serial.println("US#1 connected");
         ErrorState = ERROR_NOERROR;
-        client.println("31a1");
+        client.print(KASSA);        
+        client.println("a1");
         client.stop();
       } else {
         Serial.println("US#1 connection failed");
