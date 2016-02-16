@@ -1,6 +1,6 @@
 #include <Ethernet.h>
 
-#define KASSA 49       // номер кассы
+#define KASSA 51       // номер кассы
 #define TIMEOUT 150     // задержка в секундах между срабатываниями УЗД
 #define PORT 2200       // порт для подключения к удаленному компу
 #define TRIG_1 2
@@ -62,8 +62,8 @@ void loop() {
       if (client.connect(server, PORT)) {
         Serial.println("US#1 connected");
         ErrorState = ERROR_NOERROR;
-        client.print(KASSA);        
-        client.println("a1");
+//        client.print(KASSA);        
+        client.println("51a1");
         client.stop();
       } else {
         Serial.println("US#1 connection failed");
