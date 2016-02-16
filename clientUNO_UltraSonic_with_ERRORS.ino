@@ -1,10 +1,10 @@
 #include <Ethernet.h>
-#include <EthernetClient.h>
-#include <SPI.h>
-#include <avr/wdt.h>
+// #include <EthernetClient.h>
+// #include <SPI.h>
+// #include <avr/wdt.h>
 
 
-#define KASSA 110       // номер кассы
+#define KASSA 55       // номер кассы
 #define TIMEOUT 150     // задержка в секундах между срабатываниями УЗД
 #define PORT 2200       // порт для подключения к удаленному компу
 #define TRIG_1 2
@@ -31,21 +31,21 @@ IPAddress subnet(255, 255, 252, 0);
 IPAddress ip(192, 168, 4, 55);      // ip устройства для 55 кассы (100я касса для теста)
 IPAddress server(192, 168, 5, 85); 
 IPAddress Dns(192, 168, 5, 139);
-IPAddress gateway(1, 1, 1, 1);
+IPAddress gateway(192, 168, 5, 139);
 
 EthernetClient client;
 
 void setup() {
-  wdt_disable();                        //отключаем таймер
+//  wdt_disable();                        //отключаем таймер
   pinMode(TRIG_1, OUTPUT);              //инициируем как выход
   pinMode(ECHO_1, INPUT);               //инициируем как вход
   pinMode(LED_PIN_ACTIVE, OUTPUT);      //индикация ошибок выключена т.е. негорит
   pinMode(LED_PIN_ERROR_SENSE, OUTPUT); //индикация ошибок выключена т.е. негорит
   pinMode(LED_PIN_ERROR_LAN, OUTPUT);   //индикация ошибок выключена т.е. негорит
   Serial.begin(SERIAL_SPEED);
-  Ethernet.begin(mac, ip, dns, 1, subnet);
+  Ethernet.begin(mac, ip, Dns, gateway, subnet);
   delay(1000);
-  wdt_enable (WDTO_8S);                 //установили таймер на 8 сек.
+//  wdt_enable (WDTO_8S);                 //установили таймер на 8 сек.
   Serial.println("Connecting...");      
   while (client) {
     ; // ожидаем подключения клиента
@@ -53,11 +53,12 @@ void setup() {
 }
 
 void loop() {
-  wdt_reset();                                    //обнулили таймер иначе будет резет
+//  wdt_reset();                                    //обнулили таймер иначе будет резет
   blinkLed(BLINK_INTERVAL);                       // мигаем зеленым если все в порядке
   static unsigned long previousMillis = 0;        // храним время последнего переключения светодиода
   static int distance_sm_1;
   distance_sm_1 = usRead(TRIG_1, ECHO_1);         // возвращаем дистанцию
+  Serial.println(distance_sm_1);
   if (distance_sm_1 < DIST_MAX_1) {
     if (US_status_1 == LOW) {
       Serial.println("US#1 Motion detected!");
@@ -65,7 +66,7 @@ void loop() {
       if (client.connect(server, PORT)) {
         Serial.println("US#1 connected");
         ErrorState = ERROR_NOERROR;
-        client.println("100a1");
+        client.println("55a1");
         client.stop();
       } else {
         Serial.println("US#1 connection failed");
