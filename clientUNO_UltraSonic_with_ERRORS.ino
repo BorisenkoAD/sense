@@ -4,7 +4,7 @@
 // #include <avr/wdt.h>
 
 
-#define KASSA 55       // номер кассы
+#define KASSA 31       // номер кассы
 #define TIMEOUT 150     // задержка в секундах между срабатываниями УЗД
 #define PORT 2200       // порт для подключения к удаленному компу
 #define TRIG_1 2
@@ -28,7 +28,7 @@ byte ErrorState = ERROR_NOERROR;    //изначально ошибок нет.
 byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
 
 IPAddress subnet(255, 255, 252, 0);
-IPAddress ip(192, 168, 4, 55);      // ip устройства для 55 кассы (100я касса для теста)
+IPAddress ip(192, 168, 4, 31);      // ip устройства для 55 кассы (100я касса для теста)
 IPAddress server(192, 168, 5, 85); 
 IPAddress Dns(192, 168, 5, 139);
 IPAddress gateway(192, 168, 5, 139);
@@ -58,7 +58,7 @@ void loop() {
   static unsigned long previousMillis = 0;        // храним время последнего переключения светодиода
   static int distance_sm_1;
   distance_sm_1 = usRead(TRIG_1, ECHO_1);         // возвращаем дистанцию
-  Serial.println(distance_sm_1);
+//  Serial.println(distance_sm_1);
   if (distance_sm_1 < DIST_MAX_1) {
     if (US_status_1 == LOW) {
       Serial.println("US#1 Motion detected!");
@@ -66,7 +66,7 @@ void loop() {
       if (client.connect(server, PORT)) {
         Serial.println("US#1 connected");
         ErrorState = ERROR_NOERROR;
-        client.println("55a1");
+        client.println("31a1");
         client.stop();
       } else {
         Serial.println("US#1 connection failed");
