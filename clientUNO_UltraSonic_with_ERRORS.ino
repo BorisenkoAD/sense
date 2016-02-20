@@ -1,9 +1,9 @@
 #include <Ethernet.h>
-#include <Ultrasonic.h>
+//#include <Ultrasonic.h>
 
-Ultrasonic ultrasonic(2,3); // (Trig PIN,Echo PIN)
+//Ultrasonic ultrasonic(2,3); // (Trig PIN,Echo PIN)
 
-#define KASSA 150       // номер кассы
+#define KASSA 47       // номер кассы
 #define TIMEOUT 500     // задержка в секундах между срабатываниями УЗД
 #define PORT 2249       // порт для подключения к удаленному компу
 #define DIST_MAX_1 10     //срабатывание c 10 см
@@ -12,6 +12,9 @@ Ultrasonic ultrasonic(2,3); // (Trig PIN,Echo PIN)
 #define ERROR_NOERROR 0
 #define ERROR_1 1
 #define ERROR_2 2
+
+#define TRIG_1 2
+#define ECHO_1 3
 
 #define LED_PIN_ACTIVE      19       // А5 индикация нормальной работы устройства (моргает значит не зависло)
 #define LED_PIN_ERROR_SENSE 16       // А2 индикация ошибки - нет датчика(ошибка датчика)
@@ -34,8 +37,8 @@ EthernetClient client;
 
 void setup() {
 //  wdt_disable();                        //отключаем таймер
-//  pinMode(TRIG_1, OUTPUT);              //инициируем как выход
-//  pinMode(ECHO_1, INPUT);               //инициируем как вход
+  pinMode(TRIG_1, OUTPUT);              //инициируем как выход
+  pinMode(ECHO_1, INPUT);               //инициируем как вход
   pinMode(LED_PIN_ACTIVE, OUTPUT);      //индикация ошибок выключена т.е. негорит
   pinMode(LED_PIN_ERROR_SENSE, OUTPUT); //индикация ошибок выключена т.е. негорит
   pinMode(LED_PIN_ERROR_LAN, OUTPUT);   //индикация ошибок выключена т.е. негорит
@@ -54,8 +57,9 @@ void loop() {
   blinkLed(BLINK_INTERVAL);                       // мигаем зеленым если все в порядке
   static unsigned long previousMillis = 0;        // храним время последнего переключения светодиода
   static int distance_sm_1;
-  distance_sm_1 = ultrasonic.Ranging(CM);        // возвращаем дистанцию
- // Serial.println(distance_sm_1);
+    distance_sm_1 = usRead(TRIG_1, ECHO_1) ;        // возвращаем дистанцию
+//  distance_sm_1 = ultrasonic.Ranging(CM);        // возвращаем дистанцию
+  Serial.println(distance_sm_1);
   if (distance_sm_1 < DIST_MAX_1) {
     if (US_status_1 == LOW) {
       Serial.println("US#1 Motion detected!");
@@ -64,7 +68,7 @@ void loop() {
         Serial.println("US#1 connected");
         ErrorState = ERROR_NOERROR;
 //        client.print(KASSA);        
-        client.println("150a1");
+        client.println("47a1");
         client.stop();
       } else {
         Serial.println("US#1 connection failed");
@@ -118,18 +122,18 @@ switch (ErrorState) {
 }
 }
 
-//int usRead(byte Trig, byte Echo)        // принимаю  - byte
-//{
-//  static unsigned int impulseTime = 0;   // добавил static
-//  static unsigned int distance_sm = 0;   // добавил static
-// digitalWrite(Trig, HIGH);           // Подаем импульс на вход trig дальномера
-//  delayMicroseconds(10);              // равный 10 микросекундам
-//  digitalWrite(Trig, LOW);            // Отключаем
-//  impulseTime = pulseIn(Echo, HIGH);  // Замеряем длину импульса
-//  distance_sm = impulseTime / 58;     // Пересчитываем в сантиметры
-//  return distance_sm;
-//}
-//работа индикатора АКТИВНОСТЬ на 
+int usRead(byte Trig, byte Echo)        // принимаю  - byte
+{
+  static unsigned int impulseTime = 0;   // добавил static
+  static unsigned int distance_sm = 0;   // добавил static
+ digitalWrite(Trig, HIGH);           // Подаем импульс на вход trig дальномера
+  delayMicroseconds(10);              // равный 10 микросекундам
+  digitalWrite(Trig, LOW);            // Отключаем
+  impulseTime = pulseIn(Echo, HIGH);  // Замеряем длину импульса
+  distance_sm = impulseTime / 58;     // Пересчитываем в сантиметры
+  return distance_sm;
+}
+// работа индикатора АКТИВНОСТЬ на 
 void blinkLed(unsigned long interval ){
   static unsigned long prevTime = 0; // время когда последний раз переключали диод
   if(millis() - prevTime > interval) {
