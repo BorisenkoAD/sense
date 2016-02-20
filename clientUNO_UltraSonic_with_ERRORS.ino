@@ -3,7 +3,7 @@
 
 //Ultrasonic ultrasonic(2,3); // (Trig PIN,Echo PIN)
 
-#define KASSA 47       // номер кассы
+#define KASSA 36       // номер кассы
 #define TIMEOUT 500     // задержка в секундах между срабатываниями УЗД
 #define PORT 2249       // порт для подключения к удаленному компу
 #define DIST_MAX_1 10     //срабатывание c 10 см
@@ -59,7 +59,7 @@ void loop() {
   static int distance_sm_1;
     distance_sm_1 = usRead(TRIG_1, ECHO_1) ;        // возвращаем дистанцию
 //  distance_sm_1 = ultrasonic.Ranging(CM);        // возвращаем дистанцию
-  Serial.println(distance_sm_1);
+//  Serial.println(distance_sm_1);
   if (distance_sm_1 < DIST_MAX_1) {
     if (US_status_1 == LOW) {
       Serial.println("US#1 Motion detected!");
@@ -68,7 +68,7 @@ void loop() {
         Serial.println("US#1 connected");
         ErrorState = ERROR_NOERROR;
 //        client.print(KASSA);        
-        client.println("47a1");
+        client.println("36a1");
         client.stop();
       } else {
         Serial.println("US#1 connection failed");
