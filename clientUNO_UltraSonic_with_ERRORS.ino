@@ -1,6 +1,6 @@
 #include <Ethernet.h>
 
-#define KASSA 21        // номер кассы
+#define KASSA 8        // номер кассы
 #define TIMEOUT 200     // задержка в секундах между срабатываниями УЗД
                         // задержка была 500 мс, но из-за ф-ции сброса
                         // таймера - в нем 300 мс - заменил на 200 мс
@@ -15,14 +15,14 @@
 #define TRIG_1 2
 #define ECHO_1 3
 
-#define LED_PIN_ACTIVE      18       // А5 индикация нормальной работы устройства (моргает значит не зависло)
+#define LED_PIN_ACTIVE      18       // А4 индикация нормальной работы устройства (моргает значит не зависло)
 #define LED_PIN_ERROR_SENSE 16       // А2 индикация ошибки - нет датчика(ошибка датчика)
-#define LED_PIN_ERROR_LAN   15       // А0 индикация ошибки - нет сети
+#define LED_PIN_ERROR_LAN   14       // А0 индикация ошибки - нет сети
 
 #define BLINK_INTERVAL  1000UL      // интервал между включение/выключением светодиода (1 секунда)
 
 int US_status_1 = LOW;              // изначально флаг срабатывания УЗ неактивен
-int pulsePin = 9;                   // дудим в 9ю ногу для сброса счетчика в WDT
+int pulsePin = 9;                   // дудим в 10ю ногу для сброса счетчика в WDT
 byte ErrorState = ERROR_NOERROR;    // изначально ошибок нет.
 
 byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
@@ -39,12 +39,12 @@ void setup() {
   pinMode(TRIG_1, OUTPUT);              //инициируем как выход
   pinMode(ECHO_1, INPUT);               //инициируем как вход
 
-  DDRC |= (1 << 0);                       // LED_PIN_ACTIVE как выход
-  DDRC |= (1 << 2);                       // LED_PIN_ERROR_SENSE как выход
-  DDRC |= (1 << 5);                       // LED_PIN_ERROR_LAN как выход
-  //  pinMode(LED_PIN_ACTIVE, OUTPUT);      //индикация ошибок выключена т.е. негорит
-  //  pinMode(LED_PIN_ERROR_SENSE, OUTPUT); //индикация ошибок выключена т.е. негорит
-  //  pinMode(LED_PIN_ERROR_LAN, OUTPUT);   //индикация ошибок выключена т.е. негорит
+  DDRC |= (1 << 0);                       // КРАСНЫЙ LED_PIN_ACTIVE как выход
+  DDRC |= (1 << 2);                       // ЖЕЛТЫЙ LED_PIN_ERROR_SENSE как выход
+  DDRC |= (1 << 4);                       // ЗЕЛЕНЫЙ было 5 LED_PIN_ERROR_LAN как выход
+  pinMode(LED_PIN_ACTIVE, OUTPUT);        //индикация ошибок выключена т.е. негорит
+//  pinMode(LED_PIN_ERROR_SENSE, OUTPUT); //индикация ошибок выключена т.е. негорит
+//  pinMode(LED_PIN_ERROR_LAN, OUTPUT);   //индикация ошибок выключена т.е. негорит
   //  blinkLedTest (LED_PIN_ACTIVE, LED_PIN_ERROR_SENSE, LED_PIN_ERROR_LAN);
   blinkLedTest ();
   Serial.begin(SERIAL_SPEED);
@@ -59,7 +59,7 @@ void setup() {
 }
 
 void loop() {
-  // heartbeat(); перенес в фрагмент отправка кода на сервер
+//  heartbeat(); //перенес в фрагмент отправка кода на сервер
   blinkLed(BLINK_INTERVAL);                       // мигаем зеленым если все в порядке
   static unsigned long previousMillis = 0;        // храним время последнего переключения светодиода
   static int distance_sm_1;
@@ -74,12 +74,11 @@ void loop() {
         Serial.println("US#1 connected");
         ErrorState = ERROR_NOERROR;
         //        client.print(KASSA);
-        client.println("21a1");
+        client.println("8a1");
         client.stop();
         heartbeat();
       } else {
         Serial.println("US#1 connection failed");
-
         if (ErrorState == ERROR_NOERROR)
         {
           ErrorState = ERROR_1;
@@ -103,17 +102,17 @@ void loop() {
   switch (ErrorState) {
     case ERROR_1:
       // подаем напругу на LED_PIN_ERROR_LAN (горит красный)
-      digitalWrite(LED_PIN_ERROR_LAN, HIGH);
+      PORTC |= (1 << 0);
       break;
 
     case ERROR_2:
       // подаем напругу на LED_PIN_ERROR_SENCE (горит желтый)
-      digitalWrite(LED_PIN_ERROR_SENSE, HIGH);
+      PORTC |= (1 << 2);
       break;
 
     case ERROR_NOERROR:
       // отключаем напругу с LED_PIN_ERROR (погас красный)
-      digitalWrite(LED_PIN_ERROR_LAN, LOW);
+    PORTC &= ~(1 << 0);
       break;
 
     default:
@@ -122,9 +121,9 @@ void loop() {
       // Дадим об этом знать, например поморгаем красным,
       // а заодно все повесем на 1,5 секунды ибо нехуй.
 
-      digitalWrite(LED_PIN_ERROR_LAN, HIGH);
+      PORTC &= ~(1 << 0);
       delay(1000);
-      digitalWrite(LED_PIN_ERROR_LAN, LOW);
+      PORTC |= (1 << 0);
       delay(500);
   }
 }
@@ -149,21 +148,20 @@ void blinkLed(unsigned long interval ) {
   }
 }
 // функция первичного теста светодиодов
-//void blinkLedTest(byte led1, byte led2, byte led3){
 void blinkLedTest() {
   for (int i = 0; i < 3; i++) {
-    PORTC &= ~(1 << 0);
+    PORTC &= ~(1 << 0); // погасили все светодиоды - низкий уровень на выводе PB0/PB2/PB4/
     PORTC &= ~(1 << 2);
-    PORTC &= ~(1 << 5);
-    _delay_ms(500);      // ждем 500 миллисекунд
+    PORTC &= ~(1 << 4);
+    _delay_ms(150);     // ждем 150 миллисекунд
     PORTC |= (1 << 0);  // устанавливаем высокий уровень на выводе PB5
     PORTC |= (1 << 2);
-    PORTC |= (1 << 5);
-    _delay_ms(500);      // ждем 500 миллисекунд
-    PORTC &= ~(1 << 0);
+    PORTC |= (1 << 4);
+    _delay_ms(150);     // ждем 150 миллисекунд
+    PORTC &= ~(1 << 0); // погасили все светодиоды - низкий уровень на выводе PB0/PB2/PB4/
     PORTC &= ~(1 << 2);
-    PORTC &= ~(1 << 5);
-    _delay_ms(500);      // ждем 500 миллисекунд
+    PORTC &= ~(1 << 4);
+//    _delay_ms(150);      // ждем 150 миллисекунд
   }
 }
 // функция сброса таймера для WDT
